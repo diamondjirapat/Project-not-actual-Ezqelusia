@@ -1,0 +1,7 @@
+FROM postgres:16-alpine
+
+ENV POSTGRES_USER=admin
+ENV POSTGRES_PASSWORD=secure_password
+ENV POSTGRES_DB=1000000_bandcamp_sales
+
+EXPOSE 5432
