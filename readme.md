@@ -51,7 +51,7 @@ Main scripts:
     ```
    OR
    ```bash
-   pip install pandas sqlalchemy psycopg2-binary
+   pip install pandas sqlalchemy psycopg2-binary gspread gspread-dataframe
    ```
 
 4) Ensure Docker Desktop is running.
