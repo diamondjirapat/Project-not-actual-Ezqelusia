@@ -1,11 +1,11 @@
 
 # Bandcamp Sales ETL (Python + PostgreSQL + Docker)
 
-This repository contains a simple ETL(Extract Transform Load) pipeline that ingests a large Bandcamp sales CSV into PostgreSQL, performs transformations and aggregations with pandas, and publishes results.
+This repository contains a simple ETL (Extract, Transform, Load) pipeline that ingests a large Bandcamp sales CSV into PostgreSQL, performs transformations and aggregations with pandas, and publishes results.
 
 Stack overview:
 - Language: Python
-- Libraries: `pandas`, `sqlalchemy` (requires a PostgreSQL DBAPI such as `psycopg2-binary`)
+- Libraries: `pandas`, `sqlalchemy` (requires a PostgreSQL DBAPI such as `psycopg2-binary`), `gspread`, `gspread-dataframe`
 - Database: PostgreSQL (Dockerized)
 
 ## Overview
@@ -13,12 +13,7 @@ Stack overview:
 Main scripts:
 - `ingest.py` — loads `1000000-bandcamp-sales.csv` into a PostgreSQL table named `raw_data`.
 - `transform.py` — reads from `raw_data`, performs cleaning and transformations, prints analytics, and writes the result to a `production` table.
-- `publish.py` — (TODOS NOT IMPLEMENTED YET)
-
-`run_pipeline.py` orchestrates the flow:
-1) starts the PostgreSQL container via Docker Compose,
-2) runs `ingest.py`, `transform.py`, and `publish.py` in order.
-
+- `publish.py` — reads from the `production` table and publishes the data to a Google Sheet via a service account using `gspread`.
 
 ## Requirements
 
@@ -28,6 +23,7 @@ Main scripts:
   - `pandas`
   - `sqlalchemy`
   - `psycopg2-binary` (PostgreSQL driver used by SQLAlchemy)
+  - `gspread` and `gspread-dataframe` (for publishing to Google Sheets)
 - Data file [1000000-bandcamp-sales.csv](https://www.kaggle.com/datasets/mathurinache/1000000-bandcamp-sales) present in the project root..
 
 
@@ -94,12 +90,32 @@ ENV POSTGRES_DB=1000000_bandcamp_sales
 postgresql://admin:secure_password@localhost:5432/1000000_bandcamp_sales
 ```
 
+### Google Sheets publishing (publish.py)
+
+The `publish.py` script publishes the `production` table to a Google Sheet using a Google Cloud service account.
+
+What you need:
+- A Google Cloud service account JSON key file. Place it in the project root. The default filename expected by the script is:
+  - `ageless-arcanum-479310-k7-cbe8a06a0176.json`
+- A Google Sheet to receive the data.
+
+How to configure:
+1) Create a Google Cloud project, enable the Google Sheets API, and create a Service Account with a JSON key file.
+2) Place the JSON key in the project root (or update the `SERVICE_ACCOUNT_FILE` constant in `publish.py`).
+3) Create a Google Sheet and share it with the service account’s email (found in the JSON file) with Editor access.
+
+By default, the script will resize the worksheet as needed, clear it, and write the data frame to the sheet. Run it via:
+
+```bash
+python publish.py
+```
+
 ## Scripts
 
 - `run_pipeline.py` — orchestrates Docker and ETL scripts.
 - `ingest.py` — reads `1000000-bandcamp-sales.csv` and appends to `raw_data`.
 - `transform.py` — cleans/transforms from `raw_data`, prints analytics, and appends to `production`.
-- `publish.py` — (TODOS NOT IMPLEMENTED YET)
+- `publish.py` — publishes the `production` table to a Google Sheet using a service account.
 
 ## Project Structure
 
@@ -110,5 +126,5 @@ ingest.py
 publish.py
 run_pipeline.py
 transform.py
-Readme.md
+readme.md
 ```
